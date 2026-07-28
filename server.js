@@ -6,11 +6,15 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = './data.json';
+
+// Handle Render's path
+const BASE_DIR = process.env.RENDER ? '/opt/render/project/src' : __dirname;
+const PUBLIC_DIR = path.join(BASE_DIR, 'public');
+const DATA_FILE = path.join(BASE_DIR, 'data.json');
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(PUBLIC_DIR));
 
 // Load/Save data
 function loadData() {
@@ -19,7 +23,7 @@ function loadData() {
       return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
     }
   } catch (e) {}
-  return { users: [], quizzes: getQuizzes(), notifications: [] };
+  return { users: [], quizzes: getQuizzes() };
 }
 
 function saveData(data) {
@@ -75,107 +79,4 @@ function getQuestions(quizId) {
       { text: "Your go-to comfort food?", options: ['Mac and cheese', 'Sushi', 'Tacos', "Mom's cooking"] }
     ],
     stress: [
-      { text: 'Deadline tomorrow, project nowhere near done. You...', options: ['Pull an all-nighter', 'Panic', 'Ask for help', 'Prioritize ruthlessly'] },
-      { text: 'When stressed, you typically...', options: ['Exercise it out', 'Talk to someone', 'Bury yourself in work', 'Avoid thinking about it'] },
-      { text: 'Your go-to stress relief?', options: ['Gym or running', 'Chat with friend', 'Deep breathing', 'Distraction'] },
-      { text: 'How do friends describe you under pressure?', options: ['Calm operator', 'Honest about stress', 'Gets things done', 'Needs space'] },
-      { text: 'What stressed you out recently?', options: ['Work pressure', 'Relationship stuff', 'Life uncertainty', 'Daily hassles'] }
-    ]
-  };
-  return questions[quizId] || questions.personality;
-}
-
-// Routes
-app.post('/api/auth/login', (req, res) => {
-  const { phone, referralCode } = req.body;
-  const data = loadData();
-  
-  let user = data.users.find(u => u.phone === phone);
-  
-  if (!user) {
-    user = {
-      id: crypto.randomUUID(),
-      phone,
-      points: 0,
-      lifetimePoints: 0,
-      referrals: 0,
-      referralCode: 'QB' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      quizzesCompleted: 0,
-      adsWatched: 0,
-      streak: 1,
-      createdAt: new Date().toISOString(),
-      totalWithdrawn: 0
-    };
-    data.users.push(user);
-    saveData(data);
-  }
-  
-  res.json({ user });
-});
-
-app.get('/api/quizzes', (req, res) => {
-  const data = loadData();
-  res.json(data.quizzes);
-});
-
-app.get('/api/quiz/:id/questions', (req, res) => {
-  res.json(getQuestions(req.params.id));
-});
-
-app.post('/api/quizzes/:id/complete', (req, res) => {
-  const userId = req.headers['x-user-id'];
-  const data = loadData();
-  const user = data.users.find(u => u.id === userId);
-  
-  if (user) {
-    user.points += 100;
-    user.lifetimePoints += 100;
-    user.quizzesCompleted++;
-    saveData(data);
-  }
-  
-  res.json({ points: 100, totalPoints: user?.points || 0 });
-});
-
-app.post('/api/points/watch-ad', (req, res) => {
-  const userId = req.headers['x-user-id'];
-  const data = loadData();
-  const user = data.users.find(u => u.id === userId);
-  const points = 10 + Math.floor(Math.random() * 41);
-  
-  if (user) {
-    user.points += points;
-    user.lifetimePoints += points;
-    user.adsWatched++;
-    saveData(data);
-  }
-  
-  res.json({ points, totalPoints: user?.points || 0 });
-});
-
-app.get('/api/leaderboard', (req, res) => {
-  const data = loadData();
-  const top = data.users
-    .sort((a, b) => b.lifetimePoints - a.lifetimePoints)
-    .slice(0, 10)
-    .map((u, i) => ({
-      rank: i + 1,
-      name: u.phone.replace(/(\d{3})\d{4}(\d{3})/, '$1****$2'),
-      points: u.lifetimePoints
-    }));
-  res.json(top);
-});
-
-app.get('/api/notifications', (req, res) => {
-  const names = ['Sarah', 'Mike', 'Emma', 'James', 'Lisa', 'Tom'];
-  const messages = names.map(n => `${n} just earned 500 points! 🎉`);
-  res.json(messages.map((message, i) => ({ message })));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`QuizBlast running on port ${PORT}`);
-});
+      { text: 'Deadline tomorrow, project nowhere near done. You...', options: 
