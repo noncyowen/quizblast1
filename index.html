@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0F0F1A">
+  <title>QuizBlast — Earn $25 Cash!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #FF3366;
+      --secondary: #7C3AED;
+      --accent: #10B981;
+      --warning: #F59E0B;
+      --gold: #FFD700;
+      --bg: #0F0F1A;
+      --surface: #1A1A2E;
+      --card: #252542;
+      --text: #FFFFFF;
+      --text-secondary: #A1A1AA;
+      --gradient: linear-gradient(135deg, #FF3366, #7C3AED);
+      --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+      --radius: 20px;
+      --radius-sm: 16px;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, h4 { font-family: 'Poppins', system-ui, sans-serif; font-weight: 700; }
+    .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; background: var(--bg); position: relative; }
+
+    /* Login Screen */
+    .login-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; z-index: 1000; padding: 40px 24px; }
+    .login-screen.hidden { display: none; }
+    .login-logo { text-align: center; margin-bottom: 40px; }
+    .login-logo-icon { font-size: 64px; margin-bottom: 12px; }
+    .login-logo h1 { font-size: 32px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .login-tagline { color: var(--text-secondary); text-align: center; margin-bottom: 40px; font-size: 16px; }
+    .login-tagline strong { color: var(--gold); }
+    .login-form { flex: 1; display: flex; flex-direction: column; }
+    .login-label { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+    .login-input { width: 100%; padding: 16px; background: var(--card); border: 2px solid transparent; border-radius: var(--radius-sm); font-size: 18px; color: var(--text); outline: none; margin-bottom: 16px; transition: border-color 0.2s; }
+    .login-input:focus { border-color: var(--primary); }
+    .login-btn { width: 100%; padding: 18px; background: var(--gradient); border: none; border-radius: var(--radius-sm); color: white; font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: auto; }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-terms { text-align: center; font-size: 11px; color: var(--text-secondary); margin-top: 16px; }
+
+    /* Header */
+    .header { padding: 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 100; }
+    .header-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 22px; display: flex; align-items: center; gap: 8px; }
+    .header-balance { display: flex; align-items: center; gap: 6px; background: var(--card); padding: 8px 14px; border-radius: 50px; cursor: pointer; }
+    .header-balance-amount { font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--gold); }
+
+    /* Main Content */
+    .main { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+    .main::-webkit-scrollbar { width: 4px; }
+    .main::-webkit-scrollbar-thumb { background: var(--card); }
+    .view { display: none; animation: fadeIn 0.3s ease; }
+    .view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Balance Card */
+    .balance-card { margin: 16px; padding: 24px; background: var(--card); border-radius: var(--radius); position: relative; overflow: hidden; }
+    .balance-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--gradient); }
+    .balance-label { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
+    .balance-amount { font-family: 'Poppins', sans-serif; font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+    .balance-amount span { font-size: 20px; color: var(--text-secondary); }
+    .balance-dollar { color: var(--accent); }
+    .balance-progress { margin-top: 16px; }
+    .balance-progress-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+    .balance-progress-bar { height: 12px; background: var(--surface); border-radius: 6px; overflow: hidden; }
+    .balance-progress-fill { height: 100%; background: var(--gradient); border-radius: 6px; transition: width 0.5s ease; }
+    .balance-cta { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .balance-cta-text { font-size: 13px; color: var(--text-secondary); }
+    .balance-cta-text strong { color: var(--primary); }
+
+    /* Sections */
+    .section { padding: 16px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .section-title { font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+    /* Task Cards */
+    .task-grid { display: flex; flex-direction: column; gap: 10px; }
+    .task-card { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--card); border-radius: var(--radius-sm); cursor: pointer; transition: transform 0.2s; }
+    .task-card:hover { transform: translateY(-2px); }
+    .task-card:active { transform: scale(0.98); }
+    .task-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .task-info { flex: 1; }
+    .task-name { font-weight: 600; margin-bottom: 2px; }
+    .task-desc { font-size: 12px; color: var(--text-secondary); }
+    .task-reward { text-align: right; }
+    .task-reward-amount { font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--gold); }
+    .task-reward-label { font-size: 11px; color: var(--text-secondary); }
+
+    /* Quiz Grid */
+    .quiz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .quiz-card { background: var(--card); border-radius: var(--radius-sm); padding: 16px; cursor: pointer; transition: transform 0.2s; position: relative; }
+    .quiz-card:hover { transform: translateY(-2px); }
+    .quiz-card:active { transform: scale(0.98); }
+    .quiz-emoji { font-size: 32px; margin-bottom: 8px; }
+    .quiz-title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; margin-bottom: 4px; line-height: 1.3; }
+    .quiz-meta { font-size: 12px; color: var(--text-secondary); }
+    .quiz-reward { position: absolute; top: 8px; right: 8px; background: var(--surface); padding: 4px 8px; border-radius: 50px; font-size: 11px; font-weight: 600; color: var(--gold); }
+
+    /* Notifications */
+    .notifications-feed { display: flex; flex-direction: column; gap: 8px; }
+    .notification-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--card); border-radius: var(--radius-sm); font-size: 13px; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .notification-item .emoji { font-size: 20px; }
+
+    /* Leaderboard */
+    .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 8px; }
+    .leaderboard-rank { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; font-weight: 700; }
+    .leaderboard-rank.gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
+    .leaderboard-rank.silver { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #000; }
+    .leaderboard-rank.bronze { background: linear-gradient(135deg, #CD7F32, #B87333); color: #fff; }
+    .leaderboard-name { flex: 1; font-weight: 600; }
+    .leaderboard-points { color: var(--gold); font-family: 'Poppins', sans-serif; font-weight: 600; }
+
+    /* Withdraw */
+    .withdraw-header { text-align: center; padding: 32px 16px; }
+    .withdraw-amount { font-family: 'Poppins', sans-serif; font-size: 48px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .withdraw-label { color: var(--text-secondary); font-size: 14px; }
+    .withdraw-options { padding: 16px; }
+    .withdraw-card { display: flex; align-items: center; gap: 16px; padding: 20px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 12px; cursor: pointer; transition: transform 0.2s; border: 2px solid transparent; }
+    .withdraw-card:hover { transform: translateY(-2px); }
+    .withdraw-card.selected { border-color: var(--primary); }
+    .withdraw-card.disabled { opacity: 0.5; cursor: not-allowed; }
+    .withdraw-icon { width: 56px; height: 56px; border-radius: 12px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .withdraw-info { flex: 1; }
+    .withdraw-name { font-weight: 600; margin-bottom: 2px; }
+    .withdraw-desc { font-size: 12px; color: var(--text-secondary); }
+    .withdraw-amount-label { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; color: var(--accent); }
+    .withdraw-btn { width: calc(100% - 32px); margin: 16px; padding: 18px; background: var(--gradient); border: none; border-radius: var(--radius-sm); color: white; font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .withdraw-btn:disabled { background: var(--card); color: var(--text-secondary); cursor: not-allowed; }
+
+    /* Profile */
+    .profile-header { text-align: center; padding: 32px 16px; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--gradient); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+    .profile-phone { font-size: 18px; margin-bottom: 4px; }
+    .profile-member { color: var(--text-secondary); font-size: 13px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+    .stat-value { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: var(--gold); }
+    .stat-label { font-size: 11px; color: var(--text-secondary); }
+    .referral-section { padding: 16px; }
+    .referral-card { background: var(--card); border-radius: var(--radius); padding: 24px; text-align: center; }
+    .referral-title { font-size: 16px; margin-bottom: 8px; }
+    .referral-code { background: var(--surface); padding: 12px 24px; border-radius: var(--radius-sm); font-family: monospace; font-size: 24px; letter-spacing: 4px; margin-bottom: 16px; display: inline-block; }
+    .referral-share { display: flex; gap: 8px; justify-content: center; }
+    .share-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); border: none; font-size: 20px; cursor: pointer; }
+
+    /* Bottom Navigation */
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--surface); border-top: 1px solid var(--card); display: flex; justify-content: space-around; padding: 12px 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 11px; transition: color 0.2s; position: relative; }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 22px; }
+
+    /* Quiz Screen */
+    .quiz-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 200; display: none; flex-direction: column; }
+    .quiz-screen.active { display: flex; }
+    .quiz-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
+    .quiz-close { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: none; color: var(--text); cursor: pointer; font-size: 18px; }
+    .quiz-progress-bar { height: 6px; background: var(--card); margin: 0 16px; border-radius: 3px; overflow: hidden; }
+    .quiz-progress-fill { height: 100%; background: var(--gradient); transition: width 0.3s; }
+    .quiz-content { flex: 1; display: flex; flex-direction: column; padding: 24px 16px; }
+    .quiz-counter { text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+    .quiz-question { font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 32px; }
+    .quiz-options { display: flex; flex-direction: column; gap: 12px; }
+    .quiz-option { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--card); border: 2px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
+    .quiz-option.selected { border-color: var(--primary); background: rgba(255, 51, 102, 0.1); }
+    .quiz-option:active { transform: scale(0.98); }
+    .quiz-letter { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif; font-weight: 700; }
+    .quiz-option-text { flex: 1; font-weight: 500; }
+    .quiz-next { margin-top: auto; padding: 18px; background: var(--gradient); border: none; border-radius: var(--radius-sm); color: white; font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; display: none; }
+    .quiz-next.show { display: block; }
+
+    /* Results Screen */
+    .results-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 300; display: none; flex-direction: column; overflow-y: auto; }
+    .results-screen.active { display: block; }
+    .results-content { flex: 1; padding: 24px 16px; text-align: center; }
+    .results-emoji { font-size: 80px; margin-bottom: 16px; animation: bounce 0.6s ease; }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .results-label { color: var(--text-secondary); margin-bottom: 4px; }
+    .results-title { font-size: 28px; margin-bottom: 16px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .results-reward { background: var(--card); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .results-reward-icon { font-size: 24px; }
+    .results-reward-text { font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--gold); font-size: 20px; }
+    .results-share { padding: 16px; background: var(--card); border-radius: var(--radius-sm); margin-bottom: 16px; }
+    .results-share-title { font-size: 14px; margin-bottom: 12px; color: var(--text-secondary); }
+    .results-share-btn { width: 100%; padding: 16px; background: var(--gradient); border: none; border-radius: var(--radius-sm); color: white; font-family: 'Poppins', sans-serif; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .results-share-bonus { font-size: 12px; color: var(--gold); }
+    .results-done { width: 100%; padding: 16px; background: var(--surface); border: 2px solid var(--card); border-radius: var(--radius-sm); color: var(--text); font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; }
+
+    /* Toast */
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--surface); color: white; padding: 14px 20px; border-radius: var(--radius-sm); font-weight: 500; opacity: 0; transition: all 0.3s ease; z-index: 600; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow-lg); max-width: calc(100% - 40px); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border: 2px solid var(--accent); }
+    .toast.gold { border: 2px solid var(--gold); }
+    .toast.error { border: 2px solid var(--primary); }
+
+    /* Confetti */
+    .confetti-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 500; }
+    .confetti { position: absolute; width: 10px; height: 10px; opacity: 0; }
+    @keyframes confetti-fall { 0% { opacity: 1; transform: translateY(0) rotate(0deg); } 100% { opacity: 0; transform: translateY(100vh) rotate(720deg); } }
+
+    /* Ad Modal */
+    .ad-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 400; flex-direction: column; gap: 24px; }
+    .ad-modal.active { display: flex; }
+    .ad-modal-content { width: 300px; height: 250px; background: var(--card); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .ad-modal-content p { font-weight: 600; color: var(--text-secondary); }
+    .ad-modal-timer { font-family: 'Poppins', sans-serif; font-size: 48px; font-weight: 800; color: var(--primary); }
+    .ad-skip-btn { padding: 14px 32px; background: var(--surface); border: none; border-radius: var(--radius-sm); color: var(--text-secondary); font-weight: 500; cursor: pointer; }
+    .ad-skip-btn.ready { background: var(--accent); color: white; }
+
+    /* Loading */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--card); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Streak Badge */
+    .streak-badge { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #FF6B00, #FF0000); padding: 4px 10px; border-radius: 50px; font-size: 12px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="login-screen" id="login-screen">
+      <div class="login-logo">
+        <div class="login-logo-icon">💰</div>
+        <h1>QuizBlast</h1>
+      </div>
+      <p class="login-tagline">Take quizzes. Earn <strong>$25</strong> cash rewards!</p>
+      <div class="login-form">
+        <label class="login-label">Enter your phone number</label>
+        <input type="tel" class="login-input" id="phone-input" placeholder="+1 234 567 8900">
+        <button class="login-btn" id="login-btn" onclick="login()">Continue →</button>
+        <p class="login-terms">By continuing, you agree to our Terms of Service</p>
+      </div>
+    </div>
+
+    <header class="header">
+      <div class="header-title">💰 QuizBlast</div>
+      <div class="header-balance" onclick="switchView('withdraw')">
+        <span>💎</span>
+        <span class="header-balance-amount" id="header-points">0</span>
+      </div>
+    </header>
+
+    <main class="main" id="main-content"></main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="home"><span class="nav-icon">🏠</span>Home</button>
+      <button class="nav-item" data-view="earn"><span class="nav-icon">💵</span>Earn</button>
+      <button class="nav-item" data-view="leaderboard"><span class="nav-icon">🏆</span>Top</button>
+      <button class="nav-item" data-view="withdraw"><span class="nav-icon">🏧</span>Cash</button>
+      <button class="nav-item" data-view="profile"><span class="nav-icon">👤</span>Me</button>
+    </nav>
+  </div>
+
+  <div class="quiz-screen" id="quiz-screen">
+    <div class="quiz-header">
+      <button class="quiz-close" onclick="closeQuiz()">✕</button>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress"></div></div>
+    <div class="quiz-content">
+      <div class="quiz-counter" id="quiz-counter">Question 1 of 5</div>
+      <div class="quiz-question" id="quiz-question">Loading...</div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <button class="quiz-next" id="quiz-next" onclick="nextQuestion()">Next</button>
+    </div>
+  </div>
+
+  <div class="results-screen" id="results-screen">
+    <div class="results-content">
+      <div class="results-emoji" id="results-emoji">🎉</div>
+      <div class="results-label">You got...</div>
+      <div class="results-title" id="results-title">The Dreamer</div>
+      <div class="results-reward">
+        <span class="results-reward-icon">💎</span>
+        <span class="results-reward-text" id="results-points">+100 Points!</span>
+      </div>
+      <div class="results-share">
+        <div class="results-share-title">Share to unlock +50 bonus points!</div>
+        <button class="results-share-btn" onclick="shareQuizResult()">📤 Share & Earn Bonus</button>
+        <span class="results-share-bonus">+50 bonus points</span>
+      </div>
+      <button class="results-done" onclick="finishQuiz()">Continue to Home</button>
+    </div>
+  </div>
+
+  <div class="ad-modal" id="ad-modal">
+    <div class="ad-modal-content">
+      <p>Your ad is loading...</p>
+      <div class="ad-modal-timer" id="ad-timer">5</div>
+    </div>
+    <button class="ad-skip-btn" id="ad-skip-btn" onclick="skipAd()">Wait 5 seconds</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="confetti-container" id="confetti-container"></div>
+
+  <script>
+    const API_URL = window.location.origin;
+    let state = { user: null, quizzes: [], leaderboard: [], notifications: [], streak: 0 };
+    let currentQuiz = null;
+    let currentQuestion = 0;
+    let selectedAnswer = -1;
+
+    async function init() {
+      const storedUser = localStorage.getItem('quizblast_user');
+      if (storedUser) {
+        try {
+          const response = await api('/api/auth/login', 'POST', { phone: storedUser });
+          state.user = response.user;
+          document.getElementById('login-screen').classList.add('hidden');
+        } catch (e) { localStorage.removeItem('quizblast_user'); }
+      }
+      await loadQuizzes();
+      initNavigation();
+      renderHome();
+      fetchLeaderboard();
+      fetchNotifications();
+    }
+
+    async function api(endpoint, method = 'GET', body = null) {
+      const options = { method, headers: { 'Content-Type': 'application/json' } };
+      if (state.user) options.headers['x-user-id'] = state.user.id;
+      if (body) options.body = JSON.stringify(body);
+      const response = await fetch(API_URL + endpoint, options);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Error');
+      return data;
+    }
+
+    async function login() {
+      const phone = document.getElementById('phone-input').value.trim();
+      if (!phone) { showToast('Please enter your phone number', 'error'); return; }
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true; btn.textContent = 'Loading...';
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralCode = urlParams.get('ref');
+        const response = await api('/api/auth/login', 'POST', { phone, referralCode });
+        state.user = response.user;
+        localStorage.setItem('quizblast_user', phone);
+        document.getElementById('login-screen').classList.add('hidden');
+        renderHome();
+        showToast('Welcome to QuizBlast! 🎉', 'success');
+        triggerConfetti();
+      } catch (e) { showToast(e.message || 'Login failed', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'Continue →'; }
+    }
+
+    function initNavigation() {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => { switchView(item.dataset.view); });
+      });
+    }
+
+    function switchView(view) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector(`[data-view="${view}"]`).classList.add('active');
+      if (view === 'home') renderHome();
+      else if (view === 'earn') renderEarn();
+      else if (view === 'leaderboard') renderLeaderboard();
+      else if (view === 'withdraw') renderWithdraw();
+      else if (view === 'profile') renderProfile();
+    }
+
+    async function loadQuizzes() {
+      try { const data = await api('/api/quizzes'); state.quizzes = data; }
+      catch (e) { state.quizzes = getOfflineQuizzes(); }
+    }
+
+    async function fetchLeaderboard() {
+      try { const data = await api('/api/leaderboard'); state.leaderboard = data; }
+      catch (e) { state.leaderboard = []; }
+    }
+
+    async function fetchNotifications() {
+      try { const data = await api('/api/notifications'); state.notifications = data; }
+      catch (e) { state.notifications = []; }
+    }
+
+    function renderHome() {
+      if (!state.user) { document.getElementById('main-content').innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>'; return; }
+      const points = state.user.points || 0;
+      const progress = Math.min((points / 25000) * 100, 100);
+      const dollarValue = (points / 1000).toFixed(2);
+      const needed = (25000 - points) > 0 ? ((25000 - points) / 1000).toFixed(2) : '0.00';
+      document.getElementById('header-points').textContent = points.toLocaleString();
+      const main = document.getElementById('main-content');
+      main.innerHTML = `
+        <div class="balance-card">
+          <div class="balance-label">Your Balance</div>
+          <div class="balance-amount"><span class="balance-dollar">$</span>${dollarValue}</div>
+          <div class="balance-progress">
+            <div class="balance-progress-header"><span>Progress to $25 withdrawal</span><span>${progress.toFixed(1)}%</span></div>
+            <div class="balance-progress-bar"><div class="balance-progress-fill" style="width: ${progress}%"></div></div>
+          </div>
+          <div class="balance-cta">
+            <span class="balance-cta-text">Need <strong>$${needed}</strong> more to withdraw</span>
+            ${state.user.streak >= 7 ? '<span class="streak-badge">🔥 7-Day Streak!</span>' : ''}
+          </div>
+        </div>
+        ${state.notifications.length > 0 ? `<div class="section"><div class="section-header"><h3 class="section-title">⚡ Live Activity</h3></div><div class="notifications-feed">${state.notifications.slice(0, 5).map(n => `<div class="notification-item"><span class="emoji">🎉</span><span>${n.message}</span></div>`).join('')}</div></div>` : ''}
+        <div class="section">
+          <div class="section-header"><h3 class="section-title">🎯 Take a Quiz</h3></div>
+          <div class="quiz-grid">${state.quizzes.slice(0, 6).map(q => `<div class="quiz-card" onclick="startQuiz('${q.id}')"><div class="quiz-reward">+100 pts</div><div class="quiz-emoji">${q.emoji || '🎯'}</div><div class="quiz-title">${q.title}</div><div class="quiz-meta">${((q.plays || 0) / 1000).toFixed(1)}k plays</div></div>`).join('')}</div>
+        </div>
+        <div style="margin: 16px; padding: 30px; background: var(--card); border-radius: var(--radius-sm); text-align: center;">
+          <p style="font-weight: 600; color: var(--text-secondary);">📺 Advertisement</p>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">Tap below to earn points</p>
+          <button onclick="showAdModal()" style="margin-top: 12px; padding: 12px 24px; background: var(--gradient); border: none; border-radius: 50px; color: white; font-weight: 600; cursor: pointer;">Watch Ad +10-50 pts</button>
+        </div>
+      `;
+    }
+
+    function renderEarn() {
+      const main = document.getElementById('main-content');
+      main.innerHTML = `
+        <div class="section">
+          <div class="section-header"><h3 class="section-title">💵 Earn Points</h3></div>
+          <div class="task-grid">
+            <div class="task-card" onclick="showAdModal()"><div class="task-icon">📺</div><div class="task-info"><div class="task-name">Watch Ad</div><div class="task-desc">Earn points by watching ads</div></div><div class="task-reward"><div class="task-reward-amount">+10-50</div><div class="task-reward-label">points</div></div></div>
+            <div class="task-card" onclick="startQuiz(state.quizzes[0]?.id)"><div class="task-icon">🎯</div><div class="task-info"><div class="task-name">Take a Quiz</div><div class="task-desc">Complete any quiz to earn</div></div><div class="task-reward"><div class="task-reward-amount">+100</div><div class="task-reward-label">points</div></div></div>
+            <div class="task-card" onclick="claimDailyBonus()"><div class="task-icon">🎁</div><div class="task-info"><div class="task-name">Daily Bonus</div><div class="task-desc">Claim your daily reward</div></div><div class="task-reward"><div class="task-reward-amount">+25</div><div class="task-reward-label">points</div></div></div>
+            <div class="task-card" onclick="shareReferralLink()"><div class="task-icon">👥</div><div class="task-info"><div class="task-name">Refer Friends</div><div class="task-desc">Share your code with friends</div></div><div class="task-reward"><div class="task-reward-amount">+500</div><div class="task-reward-label">points</div></div></div>
+            <div class="task-card" onclick="shareQuizResult()"><div class="task-icon">📤</div><div class="task-info"><div class="task-name">Share Quiz Result</div><div class="task-desc">Share your result to social media</div></div><div class="task-reward"><div class="task-reward-amount">+50</div><div class="task-reward-label">points</div></div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLeaderboard() {
+      const main = document.getElementById('main-content');
+      main.innerHTML = `<div class="section"><div class="section-header"><h3 class="section-title">🏆 Top Earners</h3></div>${state.leaderboard.length > 0 ? state.leaderboard.map((user, i) => `<div class="leaderboard-item"><div class="leaderboard-rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</div><div class="leaderboard-name">${user.name}</div><div class="leaderboard-points">${user.points.toLocaleString()} pts</div></div>`).join('') : '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Be the first to top the leaderboard!</p>'}</div>`;
+    }
+
+    function renderWithdraw() {
+      if (!state.user) return;
+      const points = state.user.points || 0;
+      const canWithdraw = points >= 25000;
+      const progress = Math.min((points / 25000) * 100, 100);
+      const main = document.getElementById('main-content');
+      main.innerHTML = `
+        <div class="withdraw-header"><div class="withdraw-amount">$${(points / 1000).toFixed(2)}</div><div class="withdraw-label">Current Balance</div></div>
+        <div class="balance-progress" style="padding: 0 16px; margin-bottom: 24px;">
+          <div class="balance-progress-header"><span>Progress to $25</span><span>${progress.toFixed(1)}%</span></div>
+          <div class="balance-progress-bar"><div class="balance-progress-fill" style="width: ${progress}%"></div></div>
+        </div>
+        <div class="withdraw-options">
+          <h3 style="margin-bottom: 12px;">Select Withdrawal Method</h3>
+          <div class="withdraw-card ${!canWithdraw ? 'disabled' : ''}" onclick="${canWithdraw ? "selectWithdraw('amazon')" : ''}"><div class="withdraw-icon">📦</div><div class="withdraw-info"><div class="withdraw-name">Amazon Gift Card</div><div class="withdraw-desc">Instant delivery to your email</div></div><div class="withdraw-amount-label">$25</div></div>
+          <div class="withdraw-card ${!canWithdraw ? 'disabled' : ''}" onclick="${canWithdraw ? "selectWithdraw('paypal')" : ''}"><div class="withdraw-icon">💳</div><div class="withdraw-info"><div class="withdraw-name">PayPal Cash</div><div class="withdraw-desc">Transfer to your PayPal account</div></div><div class="withdraw-amount-label">$25</div></div>
+          <div class="withdraw-card ${!canWithdraw ? 'disabled' : ''}" onclick="${canWithdraw ? "selectWithdraw('google')" : ''}"><div class="withdraw-icon">🎮</div><div class="withdraw-info"><div class="withdraw-name">Google Play Credit</div><div class="withdraw-desc">Use on apps and games</div></div><div class="withdraw-amount-label">$25</div></div>
+        </div>
+        ${!canWithdraw ? `<p style="text-align: center; color: var(--text-secondary); padding: 16px;">You need <strong style="color: var(--primary);">$${((25000 - points) / 1000).toFixed(2)}</strong> more to withdraw.</p>` : ''}
+        <button class="withdraw-btn" ${!canWithdraw ? 'disabled' : ''} onclick="requestWithdrawal()">${canWithdraw ? '💰 Withdraw $25' : '🔒 Minimum: $25.00'}</button>
+      `;
+    }
+
+    let selectedWithdrawMethod = 'amazon';
+    function selectWithdraw(method) { selectedWithdrawMethod = method; document.querySelectorAll('.withdraw-card').forEach(c => c.classList.remove('selected')); event.currentTarget.classList.add('selected'); }
+    async function requestWithdrawal() {
+      try {
+        const response = await api('/api/withdraw/request', 'POST', { method: selectedWithdrawMethod });
+        state.user.points = response.remainingPoints;
+        showToast(`$${response.amount} withdrawal submitted! 🎉`, 'success');
+        triggerConfetti();
+        renderWithdraw();
+      } catch (e) { showToast(e.message || 'Withdrawal failed', 'error'); }
+    }
+
+    function renderProfile() {
+      if (!state.user) return;
+      const main = document.getElementById('main-content');
+      main.innerHTML = `
+        <div class="profile-header"><div class="profile-avatar">👤</div><div class="profile-phone">${state.user.phone}</div><div class="profile-member">Member since ${new Date(state.user.createdAt).toLocaleDateString()}</div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value">${state.user.quizzesCompleted || 0}</div><div class="stat-label">Quizzes</div></div>
+          <div class="stat-card"><div class="stat-value">${state.user.referrals || 0}</div><div class="stat-label">Referrals</div></div>
+          <div class="stat-card"><div class="stat-value">${state.user.adsWatched || 0}</div><div class="stat-label">Ads Watched</div></div>
+        </div>
+        <div class="referral-section">
+          <div class="referral-card">
+            <h3 class="referral-title">Invite Friends & Earn 500 Points!</h3>
+            <div class="referral-code">${state.user.referralCode}</div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">When your friend signs up with your code, you both earn 500 points!</p>
+            <div class="referral-share">
+              <button class="share-btn" onclick="shareReferralLink()">📤</button>
+              <button class="share-btn" onclick="copyReferralCode()">📋</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function startQuiz(quizId) {
+      if (!quizId) return;
+      currentQuiz = quizId; currentQuestion = 0; selectedAnswer = -1;
+      try { const data = await api(`/api/quiz/${quizId}/questions`); currentQuiz = { id: quizId, questions: data }; }
+      catch (e) { currentQuiz = { id: quizId, questions: getOfflineQuestions(quizId) }; }
+      document.getElementById('quiz-screen').classList.add('active');
+      document.getElementById('results-screen').classList.remove('active');
+      renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+      const q = currentQuiz.questions[currentQuestion];
+      document.getElementById('quiz-progress').style.width = `${((currentQuestion + 1) / currentQuiz.questions.length) * 100}%`;
+      document.getElementById('quiz-counter').textContent = `Question ${currentQuestion + 1} of ${currentQuiz.questions.length}`;
+      document.getElementById('quiz-question').textContent = q.text;
+      const letters = ['A', 'B', 'C', 'D'];
+      document.getElementById('quiz-options').innerHTML = q.options.map((opt, i) => `<div class="quiz-option" onclick="selectQuizOption(${i})"><div class="quiz-letter">${letters[i]}</div><div class="quiz-option-text">${opt}</div></div>`).join('');
+      document.getElementById('quiz-next').classList.remove('show');
+    }
+
+    function selectQuizOption(index) { document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected')); document.querySelectorAll('.quiz-option')[index].classList.add('selected'); selectedAnswer = index; document.getElementById('quiz-next').classList.add('show'); }
+    function nextQuestion() { if (selectedAnswer < 0) return; currentQuestion++; if (currentQuestion >= currentQuiz.questions.length) { showQuizResults(); } else { selectedAnswer = -1; renderQuizQuestion(); } }
+    function closeQuiz() { document.getElementById('quiz-screen').classList.remove('active'); currentQuiz = null; }
+    function finishQuiz() { document.getElementById('results-screen').classList.remove('active'); switchView('home'); }
+
+    async function showQuizResults() {
+      document.getElementById('quiz-screen').classList.remove('active');
+      document.getElementById('results-screen').classList.add('active');
+      let totalPoints = 100;
+      try { const response = await api(`/api/quizzes/${currentQuiz.id}/complete`, 'POST', { shared: false }); totalPoints = response.points; state.user.points = response.totalPoints; document.getElementById('header-points').textContent = response.totalPoints.toLocaleString(); }
+      catch (e) { state.user.points = (state.user.points || 0) + 100; }
+      document.getElementById('results-points').textContent = `+${totalPoints} Points!`;
+      document.getElementById('results-emoji').textContent = ['🎉', '🌟', '🔥', '💯', '🏆'][Math.floor(Math.random() * 5)];
+      document.getElementById('results-title').textContent = ['Amazing!', 'Great Job!', 'Well Done!', 'You Rock!'][Math.floor(Math.random() * 4)];
+      triggerConfetti();
+    }
+
+    async function showAdModal() {
+      const modal = document.getElementById('ad-modal'); const timerEl = document.getElementById('ad-timer'); const skipBtn = document.getElementById('ad-skip-btn');
+      modal.classList.add('active'); skipBtn.classList.remove('ready'); skipBtn.textContent = 'Wait 5 seconds';
+      let seconds = 5; timerEl.textContent = seconds;
+      const interval = setInterval(() => { seconds--; timerEl.textContent = seconds; if (seconds <= 0) { clearInterval(interval); skipBtn.classList.add('ready'); skipBtn.textContent = 'Claim +10-50 points!'; } }, 1000);
+      modal.dataset.interval = interval;
+    }
+
+    async function skipAd() {
+      const modal = document.getElementById('ad-modal'); const skipBtn = document.getElementById('ad-skip-btn');
+      if (!skipBtn.classList.contains('ready')) return;
+      clearInterval(parseInt(modal.dataset.interval)); modal.classList.remove('active');
+      try { const response = await api('/api/points/watch-ad', 'POST'); state.user.points = response.totalPoints; document.getElementById('header-points').textContent = response.totalPoints.toLocaleString(); showToast(`+${response.points} points! 🎉`, 'gold'); }
+      catch (e) { const points = 10 + Math.floor(Math.random() * 41); state.user.points = (state.user.points || 0) + points; document.getElementById('header-points').textContent = state.user.points.toLocaleString(); showToast(`+${points} points! 🎉`, 'gold'); }
+    }
+
+    async function claimDailyBonus() {
+      try { const response = await api('/api/points/daily-login', 'POST'); state.user.points = response.totalPoints; state.user.streak = response.streak; document.getElementById('header-points').textContent = response.totalPoints.toLocaleString(); showToast(`+${response.points} points! 🎁`, 'success'); }
+      catch (e) { showToast(e.message || 'Already claimed today!', 'error'); }
+    }
+
+    function shareQuizResult() {
+      const points = 50;
+      if (state.user) { state.user.points = (state.user.points || 0) + points; document.getElementById('header-points').textContent = state.user.points.toLocaleString(); }
+      showToast(`+${points} bonus points! 📤`, 'success');
+      if (navigator.share) { navigator.share({ title: 'QuizBlast', text: 'I just earned points on QuizBlast! Join me and earn $25!', url: 'https://quizblast.app?ref=' + (state.user?.referralCode || '') }); }
+    }
+
+    function shareReferralLink() {
+      const points = 500;
+      if (state.user) { state.user.points = (state.user.points || 0) + points; state.user.referrals = (state.user.referrals || 0) + 1; document.getElementById('header-points').textContent = state.user.points.toLocaleString(); }
+      showToast(`+${points} points! Share your code: ${state.user?.referralCode || 'QBXXXX'}`, 'success');
+      if (navigator.share) { navigator.share({ title: 'Join QuizBlast', text: `Use my code ${state.user?.referralCode} to join QuizBlast and earn $25!`, url: 'https://quizblast.app?ref=' + (state.user?.referralCode || '') }); }
+    }
+
+    function copyReferralCode() { const code = state.user?.referralCode || 'QBXXXX'; navigator.clipboard?.writeText(code); showToast('Code copied!', 'success'); }
+
+    function showToast(message, type = 'info') { const toast = document.getElementById('toast'); toast.textContent = message; toast.className = `toast ${type}`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+    function triggerConfetti() {
+      const container = document.getElementById('confetti-container'); const colors = ['#FF3366', '#7C3AED', '#10B981', '#F59E0B', '#FFD700'];
+      for (let i = 0; i < 50; i++) { const confetti = document.createElement('div'); confetti.className = 'confetti'; confetti.style.left = Math.random() * 100 + '%'; confetti.style.top = '-10px'; confetti.style.background = colors[Math.floor(Math.random() * colors.length)]; confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0'; confetti.style.animation = `confetti-fall ${2 + Math.random() * 2}s ease-out forwards`; confetti.style.animationDelay = Math.random() * 0.5 + 's'; container.appendChild(confetti); setTimeout(() => confetti.remove(), 4000); }
+    }
+
+    function getOfflineQuizzes() { return [{ id: 'personality', title: 'What Kind of Person Are You?', emoji: '🔮', plays: 12843 }, { id: 'morning', title: 'Are You a Morning Person?', emoji: '☀️', plays: 8972 }, { id: 'love', title: "What's Your Love Language?", emoji: '💕', plays: 15234 }, { id: 'social', title: 'Introvert or Extrovert?', emoji: '🫂', plays: 18923 }, { id: 'food', title: "What's Your Food Personality?", emoji: '🍕', plays: 7654 }, { id: 'stress', title: 'How Do You Handle Stress?', emoji: '🧘', plays: 6543 }]; }
+
+    function getOfflineQuestions(quizId) {
+      const q = {
+        personality: [{ text: 'How do you prefer to spend your weekend?', options: ['Exploring new places', 'Relaxing at home', 'Hanging with friends', 'Working on projects'] }, { text: 'When making a decision, you rely on...', options: ['Your gut feeling', 'Careful analysis', 'What others think', 'Logic and facts'] }, { text: 'Your ideal morning starts with...', options: ['Meditation', 'High-energy workout', 'Checking social media', 'A big breakfast'] }, { text: 'How do you handle unexpected problems?', options: ['Adapt quickly', 'Overthink solutions', 'Ask for help', 'Ignore them'] }, { text: 'What motivates you most?', options: ['Personal growth', 'Recognition', 'Helping others', 'Achievement'] }],
+        morning: [{ text: 'Alarm goes off at 5 AM. First thought?', options: ['Yes! Time to crush it!', 'Hit snooze 5 times', 'I hate mornings', 'Depends on the day'] }, { text: "What's your ideal breakfast?", options: ['Full English', 'Just coffee', 'Something healthy', 'I skip breakfast'] }, { text: 'How do you feel after waking up?', options: ['Energized!', 'Groggy', 'Anxious', 'Ready to go'] }, { text: 'Best time for productive work?', options: ['Early morning', 'Midday', 'Late night', 'No pattern'] }, { text: 'Morning non-negotiable?', options: ['Exercise', 'Coffee first', 'Check phone', 'Quiet time'] }],
+        love: [{ text: 'Partner surprises you with flowers. You feel...', options: ['So loved!', 'Happy but awkward', 'Wished they helped instead', 'Want quality time'] }, { text: 'How do you show friends you care?', options: ['Gifts', 'Kind words', 'Helping out', 'Spending time together'] }, { text: "What's more meaningful?", options: ['Thoughtful gift', '"I love you"', 'Helps with chores', 'Movie night together'] }, { text: 'After a long day, you want...', options: ['A relaxing surprise', 'Someone to listen', 'Help with tasks', 'Quality time'] }, { text: 'Love language for yourself?', options: ['Spoil myself', 'Positive affirmations', 'Self-care tasks', 'Alone time'] }],
+        social: [{ text: 'After socializing all week, you need...', options: ['Solo time to recharge', 'More social plans!', 'Small group activities', 'Depends on the people'] }, { text: 'At a party, you typically...', options: ['Find a quiet corner', 'Work the room', 'Stick with close friends', 'Leave early'] }, { text: 'Your ideal Friday night?', options: ['Home alone', 'Big night out', 'Small dinner party', 'Whatever feels right'] }, { text: 'How do you make decisions?', options: ['Think internally', 'Discuss with others', 'Consider everyone', 'Go with the flow'] }, { text: 'When you meet new people...', options: ['Observe first', 'Dive right in', 'Warm up gradually', 'Could go either way'] }],
+        food: [{ text: 'Cooking dinner for yourself?', options: ['Gourmet creation', 'Order takeout', 'Simple but healthy', "Whatever's quick"] }, { text: "Your favorite cuisine?", options: ['Italian', 'Japanese', 'Mexican', 'Comfort food'] }, { text: 'Eating alone at a restaurant...', options: ['Perfect peace', 'Bring a book', 'Skip it', 'People watch'] }, { text: 'Food is more about...', options: ['Flavor explosion', 'Health fuel', 'Cultural experience', 'Nostalgia'] }, { text: "Your go-to comfort food?", options: ['Mac and cheese', 'Sushi', 'Tacos', "Mom's cooking"] }],
+        stress: [{ text: 'Deadline tomorrow, project nowhere near done. You...', options: ['Pull an all-nighter', 'Panic', 'Ask for help', 'Prioritize ruthlessly'] }, { text: 'When stressed, you typically...', options: ['Exercise it out', 'Talk to someone', 'Bury yourself in work', 'Avoid thinking about it'] }, { text: 'Your go-to stress relief?', options: ['Gym or running', 'Chat with friend', 'Deep breathing', 'Distraction'] }, { text: 'How do friends describe you under pressure?', options: ['Calm operator', 'Honest about stress', 'Gets things done', 'Needs space'] }, { text: 'What stressed you out recently?', options: ['Work pressure', 'Relationship stuff', 'Life uncertainty', 'Daily hassles'] }]
+      };
+      return q[quizId] || q.personality;
+    }
+
+    init();
+  </script>
+</body>
+</html>
